@@ -11,20 +11,21 @@ def inline_button(text: str, callback_data: Any) -> InlineKeyboardButton:
 
 
 def inline_button_2(text: str, url: str) -> InlineKeyboardButton:
-    # макет создания кнопки
+    # макет создания кнопки-ссылки
     the_button = InlineKeyboardButton(text=text, url=url)
 
     return the_button
 
 
 def cancel_button() -> InlineKeyboardButton:
+    # кнопка отмены поиска
     cncl_btn = InlineKeyboardButton(text='Выйти из режима поиска', callback_data='/cancel')
 
     return cncl_btn
 
 
 def cities_keyboard(cities_dict: Dict) -> InlineKeyboardMarkup:
-    # макет создания клавиатуры на основании макета создания кнопки
+    # макет создания клавиатуры с названиями городов на основании макета создания кнопки
     kb = InlineKeyboardMarkup(row_width=1)
     for i_id, i_name in cities_dict.items():
         kb.insert(button=inline_button(text=i_name, callback_data=i_id))
@@ -43,7 +44,7 @@ def year_calendar_keyboard() -> InlineKeyboardMarkup:
     return kb
 
 
-def month_calendar_keyboard(cur_year: int) -> InlineKeyboardMarkup:
+def month_calendar_keyboard(cur_year: str) -> InlineKeyboardMarkup:
     # клавиатура выбора месяца
     months = {
         'Январь': '01', 'Февраль': '02', 'Март': '03', 'Апрель': '04',
@@ -51,7 +52,7 @@ def month_calendar_keyboard(cur_year: int) -> InlineKeyboardMarkup:
         'Сентябрь': '09', 'Октябрь': '10', 'Ноябрь': '11', 'Декабрь': '12',
         }
     kb = InlineKeyboardMarkup(row_width=4)
-    if cur_year > int(time.strftime('%Y-%m-%d').split('-')[0]):
+    if int(cur_year) > int(time.strftime('%Y-%m-%d').split('-')[0]):
         for i_month, i_value in months.items():
             kb.insert(inline_button(f'{i_month}', callback_data=f'{i_value}'))
     else:
@@ -102,6 +103,7 @@ def day_calendar_keyboard(month: str, year: str) -> InlineKeyboardMarkup:
 
 
 def yes_or_no_keyboard() -> InlineKeyboardMarkup:
+    # клавиатура "да" или "нет"
     kb = InlineKeyboardMarkup(row_width=2)
     kb.add(inline_button(text='Да', callback_data='photo_yes'), inline_button(text='Нет', callback_data='photo_no'))
 
@@ -109,6 +111,7 @@ def yes_or_no_keyboard() -> InlineKeyboardMarkup:
 
 
 def set_photo_quantity_keyboard() -> InlineKeyboardMarkup:
+    # клавиатура выбор количества фото - от 1 до 10
     kb = InlineKeyboardMarkup(row_width=5)
     for i_num in range(1, 11):
         kb.insert(inline_button(str(i_num), callback_data=f'{i_num}'))
@@ -117,12 +120,19 @@ def set_photo_quantity_keyboard() -> InlineKeyboardMarkup:
     return kb
 
 
-def hotel_url(name: str, url: str) -> InlineKeyboardMarkup:
+def hotel_url(name: str, url: str, message: str = 'None') -> InlineKeyboardMarkup:
+    # клавиатура с ссылкой на отель, а также для удаления текущего сообщения
     kb = InlineKeyboardMarkup(row_width=2)
     kb.add(inline_button_2(text=name, url=url))
     kb.add(inline_button(text='OK', callback_data='OK'))
-    kb.insert(inline_button(text='DELETE', callback_data='delete'))
+    kb.insert(inline_button(text='DELETE', callback_data=f'delete-{message}'))
 
     return kb
 
 
+def show_result() -> InlineKeyboardMarkup:
+    # клавиатура для вывода результатов поиска
+    kb = InlineKeyboardMarkup(row_width=1)
+    kb.add(inline_button(text='Показать отели', callback_data='1'))
+
+    return kb
