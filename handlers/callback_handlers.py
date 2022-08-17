@@ -139,7 +139,8 @@ async def get_photo_quantity(callback: CallbackQuery, state: FSMContext) -> None
                                    'Параметры сохранены.\nНажмите "показать".',
                                    reply_markup=inline_keyboard.show_result())
         else:
-            await UserStates.next()
+            cur_user.actual_photo = callback.data
+            await UserStates.min_night_price.set()
             cur_user.message_to_delete = await bot.send_message(callback.from_user.id,
                                                                 'Пожалуйста, укажите минимальную цену за ночь:')
 
@@ -177,6 +178,8 @@ async def show_hotels(callback: CallbackQuery, state: FSMContext) -> None:
                                             high=cur_user.high,)
 
     if total_result is not None and len(total_result) > 0:
+        if len(total_result) < int(cur_user.cities_quantity):
+            await bot.send_message(callback.from_user.id, f'К сожалению нашлось всего {len(total_result)} отель(ей)')
         for i_elem in total_result.values():
             text_answer = f'Сам отель: {i_elem[0]}\n' \
                           f'Цена за ночь: {i_elem[2]}\n' \
@@ -211,6 +214,7 @@ async def show_hotels(callback: CallbackQuery, state: FSMContext) -> None:
 async def get_hotel_delete(callback: CallbackQuery) -> None:
     # удаление сообщения(отеля), к которому прикреплена клавиатура
     await callback.message.delete()
-    for i_elem in callback.data.split('-'):
-        if i_elem != '' and i_elem != 'delete':
-            await bot.delete_message(chat_id=callback.from_user.id, message_id=i_elem)
+    if not callback.data.endswith('None'):
+        for i_elem in callback.data.split('-'):
+            if i_elem != '' and i_elem != 'delete':
+                await bot.delete_message(chat_id=callback.from_user.id, message_id=i_elem)

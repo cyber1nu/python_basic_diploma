@@ -11,7 +11,9 @@ from keyboards.inline import inline_keyboard
 @dp.message_handler(commands=['start'])
 async def command_start(message: Message) -> None:
     # Стартовая команда, добавляем нового пользователя (если новый) в хранилище (словарь) класса UserProfile
-    new_user = UserProfile(message.chat.id, '0', 'start')
+    if message.from_user.id not in UserProfile.all_users:
+        UserProfile.all_users[message.from_user.id] = UserProfile(message.from_user.id, '0', '/start')
+
     await message.delete()
     await message.answer('Привет! Я бот по поиску отелей.'
                          '\n\nДоступные команды для начала работы:\n'
@@ -27,6 +29,9 @@ async def command_start(message: Message) -> None:
 @dp.message_handler(commands=['cancel'], state="*")
 async def command_cancel(message: Message, state: FSMContext) -> None:
     # команда отмены поиска
+    if message.from_user.id not in UserProfile.all_users:
+        new_user = UserProfile(message.from_user.id, '0', '/start')
+
     await message.answer('Вы вышли из режима поиска.', reply_markup=simple_keyboard.show_commands_keyboard())
     UserProfile.all_users[message.from_user.id].set_status('0', '/start')
     if state is None:
@@ -39,6 +44,9 @@ async def command_cancel(message: Message, state: FSMContext) -> None:
 async def command_search(message: Message, state: FSMContext) -> None:
     # Ловим команды начала сценария (старт поиска) lowprice, highprice, bestdeal
     # Устанавливаем состояние пользователю - city_name
+    if message.from_user.id not in UserProfile.all_users:
+        UserProfile.all_users[message.from_user.id] = UserProfile(message.from_user.id, '0', '/start')
+
     UserProfile.all_users[message.from_user.id].message_to_delete = await message.answer(
         'Введите название города, где ищем отель.\n'
         '(небольшая сноска: в странах СНГ почему-то не ищет)')

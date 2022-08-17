@@ -26,7 +26,7 @@ def get_hotels(user_id: str, city_id: str, command: str, check_in_date: str, che
     """
     if command == '/highprice':
         order = 'PRICE_HIGHEST_FIRST'
-    elif command == '/best_deal':
+    elif command == '/bestdeal':
         order = 'DISTANCE_FROM_LANDMARK'
     else:
         order = 'PRICE'
