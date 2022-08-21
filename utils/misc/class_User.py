@@ -54,3 +54,23 @@ class UserProfile:
 
     def set_status(self, condition: str, command: str) -> None:
         self.status[0], self.status[1] = condition, command
+
+
+def date_correction(date_1: str, date_2: str) -> List:
+    year_1, year_2 = date_1[:4:], date_2[:4:]
+    month_1, month_2 = date_1[5:7:], date_2[5:7:]
+    day_1, day_2 = date_1[8::], date_2[8::]
+    if int(year_1) == int(year_2):
+        if int(month_1) == int(month_2):
+            if int(day_1) > int(day_2):
+                day_1, day_2 = day_2, day_1
+        if int(month_1) > int(month_2):
+            month_1, month_2 = month_2, month_1
+            day_1, day_2 = day_2, day_1
+    if int(year_1) > int(year_2):
+        year_1, year_2 = year_2, year_1
+        month_1, month_2 = month_2, month_1
+        day_1, day_2 = day_2, day_1
+
+    return [f'{year_1}-{month_1}-{day_1}', f'{year_2}-{month_2}-{day_2}']
+

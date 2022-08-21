@@ -22,7 +22,7 @@ def get_id_locations(query: str, locale: str = 'en_US') -> Dict:
     querystring = {"query": f"{query}", "locale": f"{locale}", "currency": "USD"}
     try:
         data = request_data(url, headers, querystring)
-        if data.status_code == 200:
+        if data != 'ERROR':
             result = json.loads(data.text)  # получаем словарь
             if len(result['suggestions'][0]['entities']) > 0:
                 for i_city in result['suggestions'][0]['entities']:
@@ -38,4 +38,4 @@ def get_id_locations(query: str, locale: str = 'en_US') -> Dict:
             raise Exception
     except Exception as exc:
         with open('errors_log.log', 'a', encoding='UTF-8') as file:
-            file.write(f'time:{time.strftime("%d %b %Y - %H:%M:%S")} error:{exc}\n')
+            file.write(f'time:{time.strftime("%d %b %Y - %H:%M:%S")} error:{exc} - ошибка ответа сервера\n')

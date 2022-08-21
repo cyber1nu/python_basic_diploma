@@ -15,7 +15,7 @@ def get_hotels_photo(hotel_id: str, quan_photo: str, some_text: str) -> List:
     counter = 1
     try:
         data = request_data(url, headers, querystring)
-        if data.status_code == 200:
+        if data != 'ERROR':
             result = json.loads(data.text)
             some_list.append(types.InputMediaPhoto(result['hotelImages'][0]['baseUrl'].replace('{size}', 'b'),
                                                    caption=some_text))
@@ -28,6 +28,6 @@ def get_hotels_photo(hotel_id: str, quan_photo: str, some_text: str) -> List:
             raise Exception
     except Exception as exc:
         with open('errors_log.log', 'a', encoding='UTF-8') as file:
-            file.write(f'time:{time.strftime("%d %b %Y - %H:%M:%S")}, error got:{exc}\n')
+            file.write(f'time:{time.strftime("%d %b %Y - %H:%M:%S")}, error got:{exc} - ошибка ответа сервера\n')
 
     return some_list

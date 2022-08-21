@@ -1,6 +1,7 @@
 from typing import Any, Dict
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import time
+import emoji
 
 
 def inline_button(text: str, callback_data: Any) -> InlineKeyboardButton:
@@ -19,7 +20,7 @@ def inline_button_2(text: str, url: str) -> InlineKeyboardButton:
 
 def cancel_button() -> InlineKeyboardButton:
     # кнопка отмены поиска
-    cncl_btn = InlineKeyboardButton(text='Выйти из режима поиска', callback_data='/cancel')
+    cncl_btn = InlineKeyboardButton(text=emoji.emojize('Выйти из режима поиска :red_circle:'), callback_data='/cancel')
 
     return cncl_btn
 
@@ -120,12 +121,12 @@ def set_photo_quantity_keyboard() -> InlineKeyboardMarkup:
     return kb
 
 
-def hotel_url(name: str, url: str, message: str = 'None') -> InlineKeyboardMarkup:
+def hotel_url(name: str, url: str, message: str = 'None', user_data: str = '') -> InlineKeyboardMarkup:
     # клавиатура с ссылкой на отель, а также для удаления текущего сообщения
     kb = InlineKeyboardMarkup(row_width=2)
     kb.add(inline_button_2(text=name, url=url))
-    kb.add(inline_button(text='OK', callback_data='OK'))
-    kb.insert(inline_button(text='DELETE', callback_data=f'delete-{message}'))
+    kb.add(inline_button(text=emoji.emojize('Добавить в :star:'), callback_data=f'OK+{user_data}'))
+    kb.insert(inline_button(text=emoji.emojize('Скрыть отель :pile_of_poo:'), callback_data=f'delete-{message}'))
 
     return kb
 
@@ -133,6 +134,16 @@ def hotel_url(name: str, url: str, message: str = 'None') -> InlineKeyboardMarku
 def show_result() -> InlineKeyboardMarkup:
     # клавиатура для вывода результатов поиска
     kb = InlineKeyboardMarkup(row_width=1)
-    kb.add(inline_button(text='Показать отели', callback_data='1'))
+    kb.add(inline_button(text=emoji.emojize('Показать отели :hotel:'), callback_data='1'))
 
+    return kb
+
+
+def hide_last_message(hotel_name='None') -> InlineKeyboardMarkup:
+    #
+    kb = InlineKeyboardMarkup(row_width=1)
+    kb.add(inline_button(text=emoji.emojize('Скрыть это сообщение :yawning_face:'), callback_data='hide'))
+    if hotel_name != 'None':
+        kb.add(inline_button(text=emoji.emojize('Удалить из избранного :pile_of_poo:'),
+                             callback_data=f'hide_favorites+{hotel_name}'))
     return kb

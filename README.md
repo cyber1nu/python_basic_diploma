@@ -4,8 +4,9 @@
 			/lowprice - Поиск отелей с сортировкой по цене (возрастание)
 			/highprice - Поиск отелей с сортировкой по цене (убывание)
 			/bestdeal - Поиск отелей с сортировкой по цене (возрастание) с указанием диапазона цен
-
-			/history - Вывод понравившихся отелей (избранное) * НА ТЕКУЩИЙ МОМЕНТ НЕ АКТИВНА
+			
+			/favorites - Вывод сохраненных в избранном отелей
+			/history - Вывод всей истории поиска 
 			
 			/cancel - команда выхода из режима диалога (сброс состояния)
 
@@ -67,3 +68,50 @@
 
 	9. Вывод сообщения, что "все параметры сохранены" с инлайн клавишей "показать отели". Отлавливаем callback с нужным 
 	состоянием и возвращаем результаты соответствующих функций с заданными параметрами.
+
+# Структура 
+
+	config_data				конфигурация бота
+		__init__.py
+		config.py
+	database				база данных
+		base_inition
+			__init__.py		
+			user_db.py		операции с базой данных set_user_history(), get_user_history(), delete_from_history
+		__init__.py
+		data_base_init.py		инициализация базы данных
+	handlers				хендлеры бота
+		default_heandlers		
+			__init__.py
+			echo.py
+			help.py
+			start.py
+		__init__.py
+		callback_handlers.py		хендлеры, отвечающие за улавливание callback
+		error_handlers.py		хендлеры, отвечающие за улавливание errors
+		message_handlers.py		хендлеры, отвечающие за улавливание message
+	keyboards				клавиатуры
+		inline				инлайн клавиатуры
+			__init__.py
+			inline_keyboard.py
+		reply				реплай клавиатуры
+			__init__.py
+			simple_keyboard.py
+		__init__.py
+	states					состояния
+		__init__.py
+		README.md
+	utils					Утилиты
+		misc				
+			__init__.py		
+			class_FSM.py		состояния ФинитСтейтМашин
+			class_User.py		класс UserProfile, функция date_correction()
+			parsing.py		функция request_data() - ответ от сервера
+		__init__.py
+		cities_names.py			get_id_locations() - получение id городов
+		hotels_photo.py			get_hotels_photo() - получение фотографий отелей
+		hotels_search.py		get_hotels() - получение отелей по id города
+		loader.py			инициализация бота, параметр для парсинга query_string
+		set_bot_commands.py
+	venv					вирутальное окружение
+	main.py					старт программы

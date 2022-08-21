@@ -43,7 +43,7 @@ def get_hotels(user_id: str, city_id: str, command: str, check_in_date: str, che
     some_string = ''
     try:
         data = request_data(url, headers, querystring)
-        if data.status_code == 200:
+        if data != 'ERROR':
             result = json.loads(data.text)  # получаем словарь
             for i_elem in result['data']['body']['searchResults']['results']:
                 counter += 1
@@ -77,4 +77,4 @@ def get_hotels(user_id: str, city_id: str, command: str, check_in_date: str, che
             raise Exception
     except Exception as exc:
         with open('errors_log.log', 'a', encoding='UTF-8') as file:
-            file.write(f'time:{time.strftime("%d %b %Y - %H:%M:%S")}, error got:{exc}\n')
+            file.write(f'time:{time.strftime("%d %b %Y - %H:%M:%S")}, error got:{exc} - ошибка ответа сервера\n')

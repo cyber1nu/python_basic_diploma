@@ -1,4 +1,4 @@
-from utils.misc.class_User import UserProfile
+from utils.misc.class_User import UserProfile, date_correction
 from utils.misc.class_FSM import UserStates
 from utils import hotels_photo, hotels_search
 from utils.loader import dp, bot
@@ -6,6 +6,9 @@ from aiogram.dispatcher.storage import FSMContext
 from aiogram.types import CallbackQuery
 from keyboards.inline import inline_keyboard
 from aiogram.dispatcher.filters import Text
+from database.base_inition.users_db import set_user_history, delete_from_history
+import time
+import emoji
 
 
 @dp.callback_query_handler(Text('/cancel'), state='*')
@@ -108,13 +111,12 @@ async def get_dep_day(callback: CallbackQuery, state: FSMContext) -> None:
     cur_user.temporary_data.append(callback.data)
     cur_user.dep_date = '-'.join(cur_user.temporary_data)
     # проверяем дату на корректность
-    if cur_user.arr_date.split('-')[0] == cur_user.dep_date.split('-')[0]:
-        if cur_user.arr_date.split('-')[1] == cur_user.dep_date.split('-')[1]:
-            if cur_user.arr_date.split('-')[2] > cur_user.dep_date.split('-')[2]:
-                cur_user.arr_date, cur_user.dep_date = cur_user.dep_date, cur_user.arr_date
+    correct_date = date_correction(cur_user.arr_date, cur_user.dep_date)
+    cur_user.arr_date, cur_user.dep_date = correct_date[0], correct_date[1]
     cur_user.temporary_data = []
     await UserStates.next()
     cur_user.message_to_delete = await bot.send_message(callback.from_user.id,
+                                                        'Учтите: более ранняя дата будет считаться днём заселения.\n'
                                                         'Вам понадобятся фотографии?',
                                                         reply_markup=inline_keyboard.yes_or_no_keyboard()
                                                         )
@@ -133,16 +135,11 @@ async def get_photo_quantity(callback: CallbackQuery, state: FSMContext) -> None
                                )
         await UserStates.next()
     else:
-        if cur_user.status[1] != '/bestdeal':
-            await UserStates.show_results.set()
-            await bot.send_message(callback.from_user.id,
-                                   'Параметры сохранены.\nНажмите "показать".',
-                                   reply_markup=inline_keyboard.show_result())
-        else:
-            cur_user.actual_photo = callback.data
-            await UserStates.min_night_price.set()
-            cur_user.message_to_delete = await bot.send_message(callback.from_user.id,
-                                                                'Пожалуйста, укажите минимальную цену за ночь:')
+        await UserStates.show_results.set()
+        cur_user.actual_photo = callback.data
+        await bot.send_message(callback.from_user.id,
+                               'Параметры сохранены.\nНажмите "показать".',
+                               reply_markup=inline_keyboard.show_result())
 
 
 @dp.callback_query_handler(state=UserStates.photo_quantity)
@@ -151,15 +148,10 @@ async def set_photo_quantity(callback: CallbackQuery, state: FSMContext) -> None
     cur_user = UserProfile.all_users[callback.from_user.id]
     cur_user.photo_quantity = callback.data
     await callback.message.delete()
-    if cur_user.status[1] != '/bestdeal':
-        await UserStates.show_results.set()
-        await bot.send_message(callback.from_user.id,
-                               'Параметры сохранены.\nНажмите "показать".',
-                               reply_markup=inline_keyboard.show_result())
-    else:
-        await UserStates.next()
-        cur_user.message_to_delete = await bot.send_message(callback.from_user.id,
-                                                            'Пожалуйста, укажите минимальную цену за ночь:')
+    await UserStates.show_results.set()
+    await bot.send_message(callback.from_user.id,
+                           'Параметры сохранены.\nНажмите "показать".',
+                           reply_markup=inline_keyboard.show_result())
 
 
 @dp.callback_query_handler(state=UserStates.show_results)
@@ -181,12 +173,17 @@ async def show_hotels(callback: CallbackQuery, state: FSMContext) -> None:
         if len(total_result) < int(cur_user.cities_quantity):
             await bot.send_message(callback.from_user.id, f'К сожалению нашлось всего {len(total_result)} отель(ей)')
         for i_elem in total_result.values():
-            text_answer = f'Сам отель: {i_elem[0]}\n' \
-                          f'Цена за ночь: {i_elem[2]}\n' \
-                          f'Кол-во звезд: {int(i_elem[1]) * ":star:"}\n' \
-                          f'Адрес: {i_elem[4][:-6:]}\n' \
-                          f'Расстояние до центра: {round(float(i_elem[5][0]) / 1.609, 1)} километра(ов)\n' \
-                          f'Итоговая стоимость за период: {i_elem[3]}\n'
+            text_answer = emoji.emojize(
+                          f'Сам отель: {i_elem[0]}\n' 
+                          f'Цена за ночь: {i_elem[2]}\n' 
+                          f'Кол-во звезд: {int(i_elem[1]) * ":star:"}\n' 
+                          f'Адрес: {i_elem[4][:-6:]}\n' 
+                          f'Расстояние до центра: {round(float(i_elem[5][0]) / 1.609, 1)} километра(ов)\n' 
+                          f'Итоговая стоимость за период: {i_elem[3]}\n')
+
+            cur_time = time.strftime('%d %B %Y %H:%M')
+            tuple_to_history = (cur_user.status[1], cur_time, callback.from_user.id, i_elem[0], i_elem[6], i_elem[2])
+            set_user_history('history', tuple_to_history)
 
             if cur_user.actual_photo == 'photo_yes':
                 cur_message = await bot.send_media_group(callback.from_user.id,
@@ -197,17 +194,49 @@ async def show_hotels(callback: CallbackQuery, state: FSMContext) -> None:
                 string = ''
                 for j_elem in cur_message:
                     string += f'{j_elem.message_id}-'
-                kb = inline_keyboard.hotel_url(i_elem[0], i_elem[6], message=string)
-                await bot.send_message(callback.from_user.id,
-                                       'Если отель не понравился, можно его просто удалить. :)',
-                                       reply_markup=kb)
+
+                under_text = emoji.emojize('Если отель не понравился, можно его просто удалить. :shushing_face:')
+                cur_user.message_to_delete = await bot.send_message(callback.from_user.id, under_text,
+                                                                    reply_markup=inline_keyboard.hotel_url(
+                                                                        i_elem[0],
+                                                                        i_elem[6],
+                                                                        message=string,
+                                                                        user_data=str(
+                                                                            cur_user.message_to_delete.message_id)))
+                async with state.proxy() as data:
+                    data[cur_user.message_to_delete.message_id] = f'{i_elem[0]}+{i_elem[6]}+{i_elem[2]}'
             else:
-                await bot.send_message(callback.from_user.id,
-                                       text_answer,
-                                       reply_markup=inline_keyboard.hotel_url(i_elem[0], i_elem[6]))
+                cur_user.message_to_delete = await bot.send_message(callback.from_user.id, text_answer,
+                                                                    reply_markup=inline_keyboard.hotel_url(
+                                                                        i_elem[0],
+                                                                        i_elem[6],
+                                                                        user_data=str(
+                                                                            cur_user.message_to_delete.message_id)))
+                async with state.proxy() as data:
+                    data[callback.message.message_id] = f'{i_elem[0]}+{i_elem[6]}+{i_elem[2]}'
 
         cur_user.status[0], cur_user.status[1] = '0', '/start'
-        await state.finish()
+        await state.reset_state(with_data=False)
+
+
+@dp.callback_query_handler(Text(startswith='hide'))
+async def get_favorite_delete(callback: CallbackQuery) -> None:
+    await callback.message.delete()
+    if callback.data.startswith('hide_favorites'):
+        delete_from_history('favorites', callback.from_user.id, callback.data[15::])
+
+
+@dp.callback_query_handler(Text(startswith='OK'))
+async def get_favorite_add(callback: CallbackQuery, state: FSMContext) -> None:
+    await callback.message.delete()
+    favorites_tuple = (UserProfile.all_users[callback.from_user.id].status[1],
+                       time.strftime('%d %B %Y %H:%M'), callback.from_user.id, )
+    async with state.proxy() as data:
+        s_key = int(callback.data[3::])
+        temporary = data[s_key].split('+')
+    favorites_tuple += tuple(temporary)
+    print(favorites_tuple)
+    set_user_history('favorites', favorites_tuple)
 
 
 @dp.callback_query_handler(Text(startswith='delete'))
