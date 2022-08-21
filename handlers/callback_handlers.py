@@ -213,7 +213,7 @@ async def show_hotels(callback: CallbackQuery, state: FSMContext) -> None:
                                                                         user_data=str(
                                                                             cur_user.message_to_delete.message_id)))
                 async with state.proxy() as data:
-                    data[callback.message.message_id] = f'{i_elem[0]}+{i_elem[6]}+{i_elem[2]}'
+                    data[cur_user.message_to_delete.message_id] = f'{i_elem[0]}+{i_elem[6]}+{i_elem[2]}'
 
         cur_user.status[0], cur_user.status[1] = '0', '/start'
         await state.reset_state(with_data=False)
@@ -235,7 +235,6 @@ async def get_favorite_add(callback: CallbackQuery, state: FSMContext) -> None:
         s_key = int(callback.data[3::])
         temporary = data[s_key].split('+')
     favorites_tuple += tuple(temporary)
-    print(favorites_tuple)
     set_user_history('favorites', favorites_tuple)
 
 
