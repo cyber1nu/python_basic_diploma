@@ -137,7 +137,7 @@ async def get_hotels_quantity(message: Message, state: FSMContext) -> None:
     else:
         if cur_user.status[1] == '/bestdeal':
             cur_user.message_to_delete = await bot.send_message(message.from_user.id,
-                                                                emoji.emojize('Укажите минимальную :dollar banknote: '
+                                                                emoji.emojize('Укажите минимальную :dollar_banknote: '
                                                                               'цену за ночь:'))
             await UserStates.min_night_price.set()
         else:
@@ -175,7 +175,7 @@ async def check_set_min_price(message: Message, state: FSMContext) -> None:
         await bot.delete_message(chat_id=message.from_user.id, message_id=cur_user.message_to_delete.message_id)
         await message.delete()
         cur_user.message_to_delete = await message.answer(emoji.emojize('Пожалуйста, укажите максимальную '
-                                                                        ':dollar banknote: цену за ночь:'))
+                                                                        ':dollar_banknote: цену за ночь:'))
         await UserStates.max_night_price.set()
 
 

@@ -196,25 +196,18 @@ async def show_hotels(callback: CallbackQuery, state: FSMContext) -> None:
                     string += f'{j_elem.message_id}-'
 
                 under_text = emoji.emojize('Если отель не понравился, можно его просто удалить. :shushing_face:')
+                temp_id = cur_user.message_to_delete.message_id
                 cur_user.message_to_delete = await bot.send_message(callback.from_user.id, under_text,
-                                                                    reply_markup=inline_keyboard.hotel_url(
-                                                                        i_elem[0],
-                                                                        i_elem[6],
-                                                                        message=string,
-                                                                        user_data=str(
-                                                                            cur_user.message_to_delete.message_id)))
+                        reply_markup=inline_keyboard.hotel_url(i_elem[0], i_elem[6],
+                                                               message=string, user_data=temp_id))
                 async with state.proxy() as data:
-                    data[cur_user.message_to_delete.message_id] = f'{i_elem[0]}+{i_elem[6]}+{i_elem[2]}'
+                    data[temp_id] = [f'{i_elem[0]}+{i_elem[6]}+{i_elem[2]}', string,]
             else:
                 cur_user.message_to_delete = await bot.send_message(callback.from_user.id, text_answer,
                                                                     reply_markup=inline_keyboard.hotel_url(
                                                                         i_elem[0],
-                                                                        i_elem[6],
-                                                                        user_data=str(
-                                                                            cur_user.message_to_delete.message_id)))
-                async with state.proxy() as data:
-                    data[cur_user.message_to_delete.message_id] = f'{i_elem[0]}+{i_elem[6]}+{i_elem[2]}'
-
+                                                                        i_elem[6]))
+        print(data)
         cur_user.status[0], cur_user.status[1] = '0', '/start'
         await state.reset_state(with_data=False)
 
@@ -229,13 +222,20 @@ async def get_favorite_delete(callback: CallbackQuery) -> None:
 @dp.callback_query_handler(Text(startswith='OK'))
 async def get_favorite_add(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.delete()
+    print(callback.data)
     favorites_tuple = (UserProfile.all_users[callback.from_user.id].status[1],
                        time.strftime('%d %B %Y %H:%M'), callback.from_user.id, )
     async with state.proxy() as data:
         s_key = int(callback.data[3::])
-        temporary = data[s_key].split('+')
+        temporary = data[s_key][0].split('+')
     favorites_tuple += tuple(temporary)
+    print(favorites_tuple)
     set_user_history('favorites', favorites_tuple)
+    print(data[s_key][1])
+    for i_elem in data[s_key][1].split('-'):
+        if i_elem != '' and i_elem != 'delete':
+            print(i_elem)
+            await bot.delete_message(chat_id=callback.from_user.id, message_id=i_elem)
 
 
 @dp.callback_query_handler(Text(startswith='delete'))
