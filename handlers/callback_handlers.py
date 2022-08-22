@@ -207,7 +207,6 @@ async def show_hotels(callback: CallbackQuery, state: FSMContext) -> None:
                                                                     reply_markup=inline_keyboard.hotel_url(
                                                                         i_elem[0],
                                                                         i_elem[6]))
-        print(data)
         cur_user.status[0], cur_user.status[1] = '0', '/start'
         await state.reset_state(with_data=False)
 
@@ -222,19 +221,15 @@ async def get_favorite_delete(callback: CallbackQuery) -> None:
 @dp.callback_query_handler(Text(startswith='OK'))
 async def get_favorite_add(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.delete()
-    print(callback.data)
     favorites_tuple = (UserProfile.all_users[callback.from_user.id].status[1],
                        time.strftime('%d %B %Y %H:%M'), callback.from_user.id, )
     async with state.proxy() as data:
         s_key = int(callback.data[3::])
         temporary = data[s_key][0].split('+')
     favorites_tuple += tuple(temporary)
-    print(favorites_tuple)
     set_user_history('favorites', favorites_tuple)
-    print(data[s_key][1])
     for i_elem in data[s_key][1].split('-'):
         if i_elem != '' and i_elem != 'delete':
-            print(i_elem)
             await bot.delete_message(chat_id=callback.from_user.id, message_id=i_elem)
 
 
