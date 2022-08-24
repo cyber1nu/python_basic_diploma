@@ -74,7 +74,7 @@ async def get_arr_date(callback: CallbackQuery, state: FSMContext) -> None:
         async with state.proxy() as chat_data:
             chat_data['arr date'] = callback.data
             cur_user.arr_date = callback.data
-            await bot.delete_message(callback.from_user.id, cur_user.message_to_delete)
+            await bot.delete_message(callback.from_user.id, cur_user.message_to_delete.message_id)
             cur_user.message_to_delete = await bot.send_message(callback.from_user.id,
                                                                 'А теперь дату окончания пребывания в отеле',
                                                                 reply_markup=inline_keyboard.pag_calendar(
@@ -125,7 +125,7 @@ async def get_dep_date(callback: CallbackQuery, state: FSMContext) -> None:
             else:
                 await callback.answer('Внимание! дата выселения не может быть раньше даты заселения!')
                 return
-            await bot.delete_message(callback.from_user.id, cur_user.message_to_delete)
+            await bot.delete_message(callback.from_user.id, cur_user.message_to_delete.message_id)
             cur_user.message_to_delete = await bot.send_message(callback.from_user.id,
                                                                 'Вам понадобятся фотографии?',
                                                                 reply_markup=inline_keyboard.yes_or_no_keyboard())
