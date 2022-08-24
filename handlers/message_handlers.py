@@ -1,6 +1,7 @@
 import re
 
 import emoji
+import time
 
 from utils.misc.class_User import UserProfile
 from utils.misc.class_FSM import UserStates
@@ -43,7 +44,7 @@ async def command_cancel(message: Message, state: FSMContext) -> None:
     if state is None:
         return
     else:
-        await state.finish()
+        await state.reset_state(with_data=False)
 
 
 @dp.message_handler(commands=['favorites'])
@@ -142,10 +143,12 @@ async def get_hotels_quantity(message: Message, state: FSMContext) -> None:
             await UserStates.min_night_price.set()
         else:
             cur_user.cities_quantity = message.text
+            cur_date = time.strftime('%Y-%m-%d')
             cur_user.message_to_delete = await bot.send_message(message.from_user.id,
                                                                 emoji.emojize('Необходимо выбрать дату заезда.\n'
-                                                                              'Пожалуйста, укажите год: :calendar:'),
-                                                                reply_markup=inline_keyboard.year_calendar_keyboard()
+                                                                              'Пожалуйста, воспользуйтесь '
+                                                                              'календарем: :calendar:'),
+                                                                reply_markup=inline_keyboard.pag_calendar(cur_date)
                                                                 )
             await message.delete()
             await UserStates.next()
@@ -202,23 +205,24 @@ async def check_set_min_price(message: Message, state: FSMContext) -> None:
             cur_user.low, cur_user.high = message.text, cur_user.low
             await bot.delete_message(chat_id=message.from_user.id, message_id=cur_user.message_to_delete.message_id)
             await message.delete()
+            cur_date = time.strftime('%Y-%m-%d')
             cur_user.message_to_delete = await bot.send_message(message.from_user.id, emoji.emojize(
                                                                 'Немного перепутали min и max. Я поменяю.\n'
-                                                                'Теперь выберите дату заезда. :calendar:\n'
-                                                                'Для начала год:'),
-                                                                reply_markup=inline_keyboard.year_calendar_keyboard()
+                                                                'Теперь выберите дату заезда. :calendar:\n'),
+                                                                reply_markup=inline_keyboard.pag_calendar(cur_date)
                                                                 )
-            await UserStates.arr_date_year.set()
+            await UserStates.arr_date.set()
         else:
             cur_user.high = message.text
             await bot.delete_message(chat_id=message.from_user.id, message_id=cur_user.message_to_delete.message_id)
             await message.delete()
+            cur_date = time.strftime('%Y-%m-%d')
             cur_user.message_to_delete = await bot.send_message(message.from_user.id, emoji.emojize(
                                                                 'Теперь выберите дату заезда. :calendar:\n'
                                                                 'Для начала год:'),
-                                                                reply_markup=inline_keyboard.year_calendar_keyboard()
+                                                                reply_markup=inline_keyboard.pag_calendar(cur_date)
                                                                 )
-            await UserStates.arr_date_year.set()
+            await UserStates.arr_date.set()
 
 
 @dp.message_handler(content_types='text')

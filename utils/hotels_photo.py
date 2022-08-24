@@ -25,8 +25,8 @@ def get_hotels_photo(hotel_id: str, quan_photo: str, some_text: str) -> List:
                 if counter >= int(quan_photo):
                     break
         else:
-            raise Exception
-    except Exception as exc:
+            raise UserWarning
+    except UserWarning as exc:
         with open('errors_log.log', 'a', encoding='UTF-8') as file:
             file.write(f'time:{time.strftime("%d %b %Y - %H:%M:%S")}, error got:{exc} - ошибка ответа сервера\n')
 

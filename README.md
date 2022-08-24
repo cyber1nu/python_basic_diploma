@@ -1,6 +1,8 @@
 Бот по поиску отелей. Hotels comfort searching (https://t.me/OptimizedSearchBot)
 
-Команда /start - выводить Клавиатуру с готовыми командами: 
+# Описание доступных команд
+
+			Команда /start - выводить Клавиатуру с готовыми командами: 
 			/lowprice - Поиск отелей с сортировкой по цене (возрастание)
 			/highprice - Поиск отелей с сортировкой по цене (убывание)
 			/bestdeal - Поиск отелей с сортировкой по цене (возрастание) с указанием диапазона цен
@@ -10,24 +12,7 @@
 			
 			/cancel - команда выхода из режима диалога (сброс состояния)
 
-
-
-#  Состояния пользователя внутри сценария
-
-        city_name: запрос названия города
-        city_id: запрос id локации
-        hotels_quantity: запрос количества отелей для поиска и вывода
-        arr_date_year: запрос даты заселения (ГОД)
-        arr_date_month: запрос даты заселения (МЕСЯЦ)
-        arr_date_day: запрос даты заселения (ДЕНЬ)
-        dep_date_year: запрос даты отъезда (ГОД)
-        dep_date_month: запрос даты отъезда (МЕСЯЦ)
-        dep_date_day: запрос даты отъезда (ДЕНЬ)
-        photo_actual: запрос выводить ли фото
-        photo_quantity: запрос о количестве фото для вывода
-        min_night_price: запрос минимальной цены за ночь
-        max_night_price: запрос максимальной цены за ночь
-        show_results: состояние, при котром выводим результаты
+			/user - скрытая команда, показывает текущих пользователей бота
 
 
 #  Сценарий диалогов: 
@@ -68,50 +53,3 @@
 
 	9. Вывод сообщения, что "все параметры сохранены" с инлайн клавишей "показать отели". Отлавливаем callback с нужным 
 	состоянием и возвращаем результаты соответствующих функций с заданными параметрами.
-
-# Структура 
-
-	config_data				конфигурация бота
-		__init__.py
-		config.py
-	database				база данных
-		base_inition
-			__init__.py		
-			user_db.py		операции с базой данных set_user_history(), get_user_history(), delete_from_history
-		__init__.py
-		data_base_init.py		инициализация базы данных
-	handlers				хендлеры бота
-		default_heandlers		
-			__init__.py
-			echo.py
-			help.py
-			start.py
-		__init__.py
-		callback_handlers.py		хендлеры, отвечающие за улавливание callback
-		error_handlers.py		хендлеры, отвечающие за улавливание errors
-		message_handlers.py		хендлеры, отвечающие за улавливание message
-	keyboards				клавиатуры
-		inline				инлайн клавиатуры
-			__init__.py
-			inline_keyboard.py
-		reply				реплай клавиатуры
-			__init__.py
-			simple_keyboard.py
-		__init__.py
-	states					состояния
-		__init__.py
-		README.md
-	utils					Утилиты
-		misc				
-			__init__.py		
-			class_FSM.py		состояния ФинитСтейтМашин
-			class_User.py		класс UserProfile, функция date_correction()
-			parsing.py		функция request_data() - ответ от сервера
-		__init__.py
-		cities_names.py			get_id_locations() - получение id городов
-		hotels_photo.py			get_hotels_photo() - получение фотографий отелей
-		hotels_search.py		get_hotels() - получение отелей по id города
-		loader.py			инициализация бота, параметр для парсинга query_string
-		set_bot_commands.py
-	venv					вирутальное окружение
-	main.py					старт программы

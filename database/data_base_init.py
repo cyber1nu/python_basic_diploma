@@ -1,8 +1,13 @@
 import sqlite3
+import os
 
 
-# создаем базу данных (файл)
-favorites_db = sqlite3.connect(r'C:\pyCharm projects\python_basic_diploma\favorites_db.db')
+path = 'C:\pyCharm projects\python_basic_diploma\favorites_db.db'
+# создаем базу данных (файл), если не существует
+if os.path.isfile(path):
+    favorites_db = sqlite3.connect(path)
+else:
+    favorites_db = sqlite3.connect(path)
 # создаем курсор для оперирования базой данных
 new_cursor = favorites_db.cursor()
 

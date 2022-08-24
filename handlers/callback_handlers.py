@@ -35,91 +35,101 @@ async def cities_to_choose(callback: CallbackQuery, state: FSMContext) -> None:
     await UserStates.next()
 
 
-@dp.callback_query_handler(state=UserStates.arr_date_year)
-async def get_arr_year(callback: CallbackQuery, state=FSMContext) -> None:
-    # получаем строкой год, запрашиваем месяц
+@dp.callback_query_handler(state=UserStates.arr_date)
+async def get_arr_date(callback: CallbackQuery, state: FSMContext) -> None:
     cur_user = UserProfile.all_users[callback.from_user.id]
-    await callback.message.delete()
-    cur_user.temporary_data.append(callback.data)
-    await bot.send_message(callback.from_user.id,
-                           'Укажите, пожалуйста, месяц:',
-                           reply_markup=inline_keyboard.month_calendar_keyboard(cur_user.temporary_data[0])
-                           )
-    await UserStates.next()
+    if callback.data.startswith('prev'):
+        x_time = callback.data[5::]
+        prev_m = x_time.split('-')[1]
+        if prev_m == '01':
+            temp_m = '12'
+            x_time_year = x_time[:5:].replace(x_time.split('-')[0], str(int(x_time.split('-')[0]) - 1))
+            x_time = x_time_year + x_time[5::].replace(prev_m, temp_m)
+        else:
+            temp_m = int(prev_m) - 1
+            if temp_m < 10:
+                temp_m = str(f'0{temp_m}')
+            else:
+                temp_m = str(temp_m)
+            x_time = x_time[:5:] + x_time[5::].replace(prev_m, temp_m)
+        await callback.message.edit_reply_markup(reply_markup=inline_keyboard.pag_calendar(x_time))
+    elif callback.data.startswith('next'):
+        x_time = callback.data[5::]
+        prev_m = x_time.split('-')[1]
+        if prev_m == '12':
+            temp_m = '01'
+            x_time_year = x_time[:5:].replace(x_time.split('-')[0], str(int(x_time.split('-')[0]) + 1))
+            x_time = x_time_year + x_time[5::].replace(prev_m, temp_m)
+        else:
+            temp_m = int(prev_m) + 1
+            if temp_m < 10:
+                temp_m = str(f'0{temp_m}')
+            else:
+                temp_m = str(temp_m)
+            x_time = x_time[:5:] + x_time[5::].replace(prev_m, temp_m)
+        await callback.message.edit_reply_markup(reply_markup=inline_keyboard.pag_calendar(x_time))
+    elif callback.data.startswith('nothing'):
+        return
+    else:
+        async with state.proxy() as chat_data:
+            chat_data['arr date'] = callback.data
+            cur_user.arr_date = callback.data
+            await bot.delete_message(callback.from_user.id, cur_user.message_to_delete)
+            cur_user.message_to_delete = await bot.send_message(callback.from_user.id,
+                                                                'А теперь дату окончания пребывания в отеле',
+                                                                reply_markup=inline_keyboard.pag_calendar(
+                                                                    cur_user.arr_date))
+            await UserStates.next()
 
 
-@dp.callback_query_handler(state=UserStates.arr_date_month)
-async def get_arr_month(callback: CallbackQuery, state: FSMContext) -> None:
-    # получаем строкой месяц, запрашиваем день
+@dp.callback_query_handler(state=UserStates.dep_date)
+async def get_dep_date(callback: CallbackQuery, state: FSMContext) -> None:
     cur_user = UserProfile.all_users[callback.from_user.id]
-    await callback.message.delete()
-    cur_user.temporary_data.append(callback.data)
-    await bot.send_message(callback.from_user.id,
-                           'Укажите, пожалуйста, день:',
-                           reply_markup=inline_keyboard.day_calendar_keyboard(
-                               cur_user.temporary_data[1], cur_user.temporary_data[0])
-                           )
-    await UserStates.next()
-
-
-@dp.callback_query_handler(state=UserStates.arr_date_day)
-async def get_arr_day(callback: CallbackQuery, state: FSMContext) -> None:
-    # получаем строкой день, temporary_data склеиваем с "-" и сохраняем в arr_date класса, запрашиваем год
-    cur_user = UserProfile.all_users[callback.from_user.id]
-    await callback.message.delete()
-    cur_user.temporary_data.append(callback.data)
-    cur_user.arr_date = '-'.join(cur_user.temporary_data)
-    cur_user.temporary_data = []
-    await UserStates.next()
-    await bot.send_message(callback.from_user.id,
-                           'До какого дня планируете отдых?.\nПожалуйста, укажите год:',
-                           reply_markup=inline_keyboard.year_calendar_keyboard()
-                           )
-
-
-@dp.callback_query_handler(state=UserStates.dep_date_year)
-async def get_depp_year(callback: CallbackQuery, state=FSMContext) -> None:
-    # получаем строкой год, запрашиваем месяц
-    cur_user = UserProfile.all_users[callback.from_user.id]
-    await callback.message.delete()
-    cur_user.temporary_data.append(callback.data)
-    await bot.send_message(callback.from_user.id,
-                           'Укажите, пожалуйста, месяц:',
-                           reply_markup=inline_keyboard.month_calendar_keyboard(cur_user.temporary_data[0])
-                           )
-    await UserStates.next()
-
-
-@dp.callback_query_handler(state=UserStates.dep_date_month)
-async def get_dep_month(callback: CallbackQuery, state: FSMContext) -> None:
-    # получаем строкой месяц, запрашиваем день
-    cur_user = UserProfile.all_users[callback.from_user.id]
-    await callback.message.delete()
-    cur_user.temporary_data.append(callback.data)
-    await bot.send_message(callback.from_user.id,
-                           'Укажите, пожалуйста, день:',
-                           reply_markup=inline_keyboard.day_calendar_keyboard(
-                               cur_user.temporary_data[1], cur_user.temporary_data[0]))
-    await UserStates.next()
-
-
-@dp.callback_query_handler(state=UserStates.dep_date_day)
-async def get_dep_day(callback: CallbackQuery, state: FSMContext) -> None:
-    # получаем строкой день, temporary_data склеиваем с "-" и сохраняем в dep_date класса, запрашиваем год
-    cur_user = UserProfile.all_users[callback.from_user.id]
-    await callback.message.delete()
-    cur_user.temporary_data.append(callback.data)
-    cur_user.dep_date = '-'.join(cur_user.temporary_data)
-    # проверяем дату на корректность
-    correct_date = date_correction(cur_user.arr_date, cur_user.dep_date)
-    cur_user.arr_date, cur_user.dep_date = correct_date[0], correct_date[1]
-    cur_user.temporary_data = []
-    await UserStates.next()
-    cur_user.message_to_delete = await bot.send_message(callback.from_user.id,
-                                                        'Учтите: более ранняя дата будет считаться днём заселения.\n'
-                                                        'Вам понадобятся фотографии?',
-                                                        reply_markup=inline_keyboard.yes_or_no_keyboard()
-                                                        )
+    if callback.data.startswith('prev'):
+        x_time = callback.data[5::]
+        prev_m = x_time.split('-')[1]
+        if prev_m == '01':
+            temp_m = '12'
+            x_time_year = x_time[:5:].replace(x_time.split('-')[0], str(int(x_time.split('-')[0]) - 1))
+            x_time = x_time_year + x_time[5::].replace(prev_m, temp_m)
+        else:
+            temp_m = int(prev_m) - 1
+            if temp_m < 10:
+                temp_m = str(f'0{temp_m}')
+            else:
+                temp_m = str(temp_m)
+            x_time = x_time[:5:] + x_time[5::].replace(prev_m, temp_m)
+        await callback.message.edit_reply_markup(reply_markup=inline_keyboard.pag_calendar(x_time))
+    elif callback.data.startswith('next'):
+        x_time = callback.data[5::]
+        prev_m = x_time.split('-')[1]
+        if prev_m == '12':
+            temp_m = '01'
+            x_time_year = x_time[:5:].replace(x_time.split('-')[0], str(int(x_time.split('-')[0]) + 1))
+            x_time = x_time_year + x_time[5::].replace(prev_m, temp_m)
+        else:
+            temp_m = int(prev_m) + 1
+            if temp_m < 10:
+                temp_m = str(f'0{temp_m}')
+            else:
+                temp_m = str(temp_m)
+            x_time = x_time[:5:] + x_time[5::].replace(prev_m, temp_m)
+        await callback.message.edit_reply_markup(reply_markup=inline_keyboard.pag_calendar(x_time))
+    elif callback.data.startswith('nothing'):
+        return
+    else:
+        async with state.proxy() as chat_data:
+            chat_data['dep date'] = callback.data
+            if date_correction(chat_data['arr date'], chat_data['dep date']):
+                cur_user.dep_date = callback.data
+            else:
+                await callback.answer('Внимание! дата выселения не может быть раньше даты заселения!')
+                return
+            await bot.delete_message(callback.from_user.id, cur_user.message_to_delete)
+            cur_user.message_to_delete = await bot.send_message(callback.from_user.id,
+                                                                'Вам понадобятся фотографии?',
+                                                                reply_markup=inline_keyboard.yes_or_no_keyboard())
+            await UserStates.next()
 
 
 @dp.callback_query_handler(state=UserStates.photo_actual)

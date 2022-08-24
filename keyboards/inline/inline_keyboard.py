@@ -147,3 +147,55 @@ def hide_last_message(hotel_name='None') -> InlineKeyboardMarkup:
         kb.add(inline_button(text=emoji.emojize('Удалить из избранного :pile_of_poo:'),
                              callback_data=f'hide_favorites+{hotel_name}'))
     return kb
+
+
+def pag_calendar(cur_date: str) -> InlineKeyboardMarkup:
+    real_date = time.strftime('%Y-%m-%d')  # 2022-08-23
+    year = cur_date.split('-')[0]
+    month = cur_date.split('-')[1]
+    day = cur_date.split('-')[2]
+    day_31 = {
+        '01': 'Январь', '03': 'Март', '05': 'Май', '07': 'Июль',
+        '08': 'Август', '10': 'Октябрь', '12': 'Декабрь',
+            }
+    day_30 = {'04': 'Апрель', '06': 'Июнь', '09': 'Сентябрь', '11': 'Ноябрь',}
+    kb = InlineKeyboardMarkup(row_width=7)
+    if month in day_31:
+        data_year = year
+        day_amount = 32
+        data_month = day_31[month]
+    elif month in day_30:
+        data_year = year
+        day_amount = 31
+        data_month = day_30[month]
+    elif month == '02':
+        data_year = year
+        data_month = 'Февраль'
+        if int(year) % 4 == 0 and int(year) % 100 != 0 or int(year) % 400 == 0:
+            day_amount = 30
+        else:
+            day_amount = 29
+    else:  # Предположительно, никогда не сработает
+        data_year = year
+        day_amount = 31
+        data_month = 'Январь'
+
+    for i_day in range(1, day_amount):
+        if i_day < 10:
+            i_day = f'0{i_day}'
+        if year == real_date[:4:] and month == real_date[5:7:] and int(i_day) <= int(real_date[8::]):
+            kb.insert(InlineKeyboardButton(text=str(i_day), callback_data=f'nothing'))
+        else:
+            kb.insert(InlineKeyboardButton(text=str(i_day), callback_data=f'{data_year}-{month}-{i_day}'))
+    prev_data = f'prev-{year}-{month}-{day}'
+    if int(year) < int(real_date.split('-')[0]):
+        prev_data = 'nothing'
+    elif int(year) == int(real_date.split('-')[0]) and int(month) == int(real_date.split('-')[1]):
+        prev_data = 'nothing'
+    next_data = f'next-{year}-{month}-{day}'
+
+    kb.add(InlineKeyboardButton(text='<<', callback_data=prev_data))
+    kb.insert(InlineKeyboardButton(text=f'{data_month}, {data_year}', callback_data='nothing'))
+    kb.insert(InlineKeyboardButton(text='>>', callback_data=next_data))
+
+    return kb

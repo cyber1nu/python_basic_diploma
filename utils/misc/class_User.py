@@ -56,21 +56,28 @@ class UserProfile:
         self.status[0], self.status[1] = condition, command
 
 
-def date_correction(date_1: str, date_2: str) -> List:
+def date_correction(date_1: str, date_2: str) -> bool:
+    """ Функция возвращает False, если дата_2 раньше дата_1 """
     year_1, year_2 = date_1[:4:], date_2[:4:]
     month_1, month_2 = date_1[5:7:], date_2[5:7:]
     day_1, day_2 = date_1[8::], date_2[8::]
+    flag = True
+    changed_dates = ''
     if int(year_1) == int(year_2):
         if int(month_1) == int(month_2):
             if int(day_1) > int(day_2):
                 day_1, day_2 = day_2, day_1
+                flag = False
         if int(month_1) > int(month_2):
             month_1, month_2 = month_2, month_1
             day_1, day_2 = day_2, day_1
+            flag = False
     if int(year_1) > int(year_2):
         year_1, year_2 = year_2, year_1
         month_1, month_2 = month_2, month_1
         day_1, day_2 = day_2, day_1
+        flag = False
+    changed_dates = [f'{year_1}-{month_1}-{day_1}', f'{year_2}-{month_2}-{day_2}']
 
-    return [f'{year_1}-{month_1}-{day_1}', f'{year_2}-{month_2}-{day_2}']
+    return flag
 

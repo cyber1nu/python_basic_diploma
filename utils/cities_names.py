@@ -35,7 +35,7 @@ def get_id_locations(query: str, locale: str = 'en_US') -> Dict:
                 with open('errors_log.log', 'a', encoding='UTF-8') as file:
                     file.write(f'time:{time.strftime("%d %b %Y - %H:%M:%S")} error: Не найдено городов по запросу\n')
         else:
-            raise Exception
-    except Exception as exc:
+            raise UserWarning
+    except UserWarning as exc:
         with open('errors_log.log', 'a', encoding='UTF-8') as file:
             file.write(f'time:{time.strftime("%d %b %Y - %H:%M:%S")} error:{exc} - ошибка ответа сервера\n')
